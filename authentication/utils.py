@@ -35,3 +35,20 @@ def verify_account(user, current_site):
     )
     email.send(fail_silently=False)
 
+
+def resend_activation_link(user, current_site):
+    """
+    In this code, if the activation link has expired, a resend_link key is returned in the response with 
+    a value of True. You can then use this key in your frontend to trigger a resend activation link request.
+    """
+    token = str(RefreshToken.for_user(user).access_token)
+    link = reverse('authentication:activate-account')
+    activation_link = f'http://{current_site}{link}?token={token}'
+    email_subject = 'Activate Your Account'
+    email_body = f"Hi! {user.username}.\n Please use the link below to activate your account.\n {activation_link}"
+    email = EmailMessage(
+        subject=email_subject,
+        body=email_body,
+        to=[user.email],
+    )
+    email.send(fail_silently=False)
