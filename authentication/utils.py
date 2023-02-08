@@ -21,3 +21,17 @@ def validate_password(password, confirm_password):
 
     return confirm_password
 
+
+def verify_account(user, current_site):
+    email_subject = 'Activate Your Account'
+    token = str(RefreshToken.for_user(user).access_token)
+    link = reverse('authentication:activate-account')
+    activation_link = f'http://{current_site}{link}?token={token}'
+    email_body = f"Hi! {user.username}.\n Please use the link below to activate your account.\n {activation_link}"
+    email = EmailMessage(
+        subject=email_subject,
+        body=email_body,
+        to=[user.email],
+    )
+    email.send(fail_silently=False)
+
