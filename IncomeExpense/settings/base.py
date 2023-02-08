@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
     #third party app
     'rest_framework',
+    'drf_yasg',
 
     #my apps
     'authentication',
