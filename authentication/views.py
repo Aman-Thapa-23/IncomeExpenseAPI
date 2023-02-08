@@ -1,20 +1,19 @@
-import time
 import jwt
 
-from rest_framework.generics import CreateAPIView
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework import status
-from rest_framework.generics import GenericAPIView
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.http import urlsafe_base64_decode
-from django.shortcuts import redirect
 from django.conf import settings
 from django.utils import timezone
 
+from rest_framework.generics import CreateAPIView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from .models import MyUser
-from .serializers import UserRegisterSerializer
+from .serializers import *
 from .utils import verify_account
 
 
@@ -35,13 +34,17 @@ class UserRegisterView(CreateAPIView):
                 'status': 'success',
                 'message': 'registration successful',
             }, status=status.HTTP_201_CREATED)
-        return Response({
+        return Response(data={
             'status': 'failed',
-            'message': serializer.data,
+            'message': 'registration failed',
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-class VerifyEmail(GenericAPIView):
+class VerifyEmail(APIView):
+    serializer_class = EmailVerificationSerializer
+
+    token_param_config = openapi.Parameter('token', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING, description='description')
+    @swagger_auto_schema(manual_parameters=[token_param_config])
     def get(self, request):
         token = self.request.GET.get('token')
         try:
@@ -52,21 +55,21 @@ class VerifyEmail(GenericAPIView):
                     'status': 'success',
                     'message': 'Email already verified.'
                 }, status=status.HTTP_200_OK)
-            elif payload['exp'] > timezone.now().timestamp():
+            if payload['exp'] > timezone.now().timestamp():
                 user.is_verified = True
                 user.save()
                 return Response({
                     'status': 'success',
                     'message': 'Email successfully verified.'
                 }, status=status.HTTP_200_OK)
-            else:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Activation link has expired.',
-                    'resend_link': True
-                }, status=status.HTTP_408_REQUEST_TIMEOUT)
-                # if the link has expired then use resend_activation_link() url present in utils by frontend in order
-                #to resend activation link for user
+        except jwt.ExpiredSignatureError as identified:
+             return Response({
+                'status': 'failed',
+                'message': 'Expired activation link.',
+                'resend_link': True
+            }, status=status.HTTP_408_REQUEST_TIMEOUT)
+            #if the link has expired then use resend_activation_link() url present in utils by frontend in order
+            #to resend activation link for user
 
         except jwt.exceptions.DecodeError:
             return Response({
