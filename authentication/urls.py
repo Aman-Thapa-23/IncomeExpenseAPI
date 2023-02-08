@@ -5,3 +5,5 @@ app_name = 'authentication'
 
 urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='user-registration'),
+    path('activate-account/', VerifyEmail.as_view(), name='activate-account'),
+]
