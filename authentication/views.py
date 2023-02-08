@@ -74,3 +74,4 @@ class VerifyEmail(GenericAPIView):
                 'message': 'Invalid activation link.'
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+
