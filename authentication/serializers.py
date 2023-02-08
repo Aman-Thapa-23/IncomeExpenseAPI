@@ -1,10 +1,16 @@
+from django.contrib import auth
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
+
 from .models import MyUser
 from .utils import validate_password
 
+
 class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(style={'input_type': 'password'}, max_length=66, min_length=8, write_only=True)
-    confirm_password = serializers.CharField(style={'input_type': 'password'}, max_length=66, min_length=8, write_only=True)
+    password = serializers.CharField(
+        style={'input_type': 'password'}, max_length=66, min_length=8, write_only=True)
+    confirm_password = serializers.CharField(
+        style={'input_type': 'password'}, max_length=66, min_length=8, write_only=True)
 
     class Meta:
         model = MyUser
@@ -25,7 +31,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'email': 'Email is required'})
 
         if not username.isalnum():
-            raise serializers.ValidationError({'username': 'Username should only contain letters and numbers'})
+            raise serializers.ValidationError(
+                {'username': 'Username should only contain letters and numbers'})
 
         validate_password(password, confirm_password)
 
@@ -37,6 +44,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class EmailVerificationSerializer(serializers.ModelSerializer):
     token = serializers.CharField(max_length=255)
+
+    class Meta:
+        model = MyUser
+        fields = ['token']
+
+
     class Meta:
         model = MyUser
         fields = ['token']
