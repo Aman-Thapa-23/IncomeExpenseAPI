@@ -1,3 +1,38 @@
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, username, password=None, **kwargs):
+        if username is None or not username:
+            raise TypeError('User should have username')
+        if email is None or not email:
+            raise TypeError('User should have email')
+        if password is None:
+            raise TypeError('Password should not be null')
+        
+        user = self.model(username=username, email=self.normalize_email(email), **kwargs)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, email, username, password=None, **kwargs):
+        if username is None or not username:
+            raise TypeError('User should have username')
+        if not email:
+            raise ValueError("Email is mandatory.")
+        kwargs.setdefault("is_staff", True)
+        kwargs.setdefault("is_superuser", True)
+        kwargs.setdefault("is_active", True)
+        kwargs.setdefault("is_verified", True)
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=username, **kwargs)
+        user.set_password(password)
+        user.save(using=self._db)
+        return 
+
+    
 class MyUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=255, unique=True, db_index=True)
     email = models.EmailField(unique=True, max_length=255, db_index=True)
