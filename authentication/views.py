@@ -4,7 +4,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
 from django.utils import timezone
 
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -77,4 +77,17 @@ class VerifyEmail(APIView):
                 'message': 'Invalid activation link.'
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
+
+class LoginAPIView(GenericAPIView):
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            print(serializer.data)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data={
+            'status': 'failed',
+            'message': 'something is wrong'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
