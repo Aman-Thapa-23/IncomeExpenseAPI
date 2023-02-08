@@ -50,6 +50,40 @@ class EmailVerificationSerializer(serializers.ModelSerializer):
         fields = ['token']
 
 
+class LoginSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=255)
+    password = serializers.CharField(
+        style={'input_type': 'password'}, write_only=True)
+    username = serializers.CharField(max_length=20, read_only=True)
+    refresh = serializers.CharField(read_only =True)
+    access = serializers.CharField(read_only =True)
+
     class Meta:
         model = MyUser
-        fields = ['token']
+        fields = ['email', 'password', 'username', 'refresh', 'access']
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')       
+        user = auth.authenticate(email=email, password=password)
+        try:
+            user_data = MyUser.objects.get(email=email)
+        except:
+            raise serializers.ValidationError(
+                {'status': 'failed', 'message': 'enter valid email'})
+        if not user_data.is_verified:  # user_data.is_verified = True. so if not True then failed or can be write as if user_data.is_verified==False
+            raise AuthenticationFailed(
+                {'status': 'failed', 'message': 'account is not active.'})
+        if not user:
+            raise AuthenticationFailed(
+                {'status': 'failed', 'message': 'invalid credentials, Try Again.'})
+
+        # from MyUser model because I have created a function to generate tokens for user
+        tokens = user.tokens()
+        data = {
+            'email': user.email,
+            'username': user.username,
+            'refresh': tokens['refresh'],
+            'access': tokens['access']
+        }
+        return data
