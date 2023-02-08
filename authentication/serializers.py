@@ -65,7 +65,6 @@ class LoginSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         email = attrs.get('email')
         password = attrs.get('password')       
-        user = auth.authenticate(email=email, password=password)
         try:
             user_data = MyUser.objects.get(email=email)
         except:
@@ -74,6 +73,8 @@ class LoginSerializer(serializers.ModelSerializer):
         if not user_data.is_verified:  # user_data.is_verified = True. so if not True then failed or can be write as if user_data.is_verified==False
             raise AuthenticationFailed(
                 {'status': 'failed', 'message': 'account is not active.'})
+
+        user = auth.authenticate(email=email, password=password)
         if not user:
             raise AuthenticationFailed(
                 {'status': 'failed', 'message': 'invalid credentials, Try Again.'})
