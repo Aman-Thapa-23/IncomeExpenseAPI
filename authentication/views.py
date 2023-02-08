@@ -40,3 +40,37 @@ class UserRegisterView(CreateAPIView):
             'message': serializer.data,
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
+class VerifyEmail(GenericAPIView):
+    def get(self, request):
+        token = self.request.GET.get('token')
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            user = MyUser.objects.get(id=payload['user_id'])
+            if user.is_verified:
+                return Response({
+                    'status': 'success',
+                    'message': 'Email already verified.'
+                }, status=status.HTTP_200_OK)
+            elif payload['exp'] > timezone.now().timestamp():
+                user.is_verified = True
+                user.save()
+                return Response({
+                    'status': 'success',
+                    'message': 'Email successfully verified.'
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Activation link has expired.',
+                    'resend_link': True
+                }, status=status.HTTP_408_REQUEST_TIMEOUT)
+                # if the link has expired then use resend_activation_link() url present in utils by frontend in order
+                #to resend activation link for user
+
+        except jwt.exceptions.DecodeError:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid activation link.'
+            }, status=status.HTTP_406_NOT_ACCEPTABLE)
+
