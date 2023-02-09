@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     #my apps
     'authentication',
     'expense',
+    'income',
 ]
 
 MIDDLEWARE = [
