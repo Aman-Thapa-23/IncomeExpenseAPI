@@ -45,10 +45,12 @@ INSTALLED_APPS = [
 
     #third party app
     'rest_framework',
+    'rest_framework_simplejwt',
     'drf_yasg',
 
     #my apps
     'authentication',
+    'expense',
 ]
 
 MIDDLEWARE = [
@@ -124,6 +126,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 5,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
@@ -138,3 +142,14 @@ EMAIL_HOST = "sandbox.smtp.mailtrap.io"
 EMAIL_HOST_USER = "af43e0835e3321"
 EMAIL_HOST_PASSWORD = "9b0e9ede2d4fd7"
 EMAIL_PORT = 2525
+
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+      }
+    }
+}
