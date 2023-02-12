@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from rest_framework.generics import CreateAPIView, GenericAPIView, UpdateAPIView
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -24,23 +25,21 @@ class UserRegisterView(CreateAPIView):
     renderer_classes = (UserRenderer,)
 
     def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-    def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-            current_site = get_current_site(self.request).domain
-            verify_account(user, current_site)
-            return Response({
-                'status': 'success',
-                'message': 'registration successful',
-            }, status=status.HTTP_201_CREATED)
-        return Response(data={
+        try:
+            if serializer.is_valid(raise_exception=True):
+                user = serializer.save()
+                current_site = get_current_site(self.request).domain
+                verify_account(user, current_site)
+                return Response(data={
+                    'status': 'success',
+                    'message': 'registration successful',
+                }, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response(data={
             'status': 'failed',
-            'message': 'registration failed',
+            'message': str(e),
         }, status=status.HTTP_400_BAD_REQUEST)
-
 
 class VerifyEmail(APIView):
     serializer_class = EmailVerificationSerializer
