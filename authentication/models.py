@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -57,3 +58,16 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
             'refresh': str(refresh_token),
             'access': str(refresh_token.access_token)
         }
+
+class PasswordReset(models.Model):
+    user_id = models.IntegerField()
+    token = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user_id
+        
+    @classmethod
+    def delete_expired(cls):
+        expired = cls.objects.filter(created_at__lte=datetime.datetime.now() - datetime.timedelta(hours=24))
+        expired.delete()

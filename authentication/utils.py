@@ -2,11 +2,7 @@ from django.contrib.auth import password_validation
 from django.core.mail import EmailMessage
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
 from django.urls import reverse
-import time
 
 
 def validate_password(password, confirm_password):
@@ -27,7 +23,7 @@ def verify_account(user, current_site):
     token = str(RefreshToken.for_user(user).access_token)
     link = reverse('authentication:activate-account')
     activation_link = f'http://{current_site}{link}?token={token}'
-    email_body = f"Hi! {user.username}.\n Please use the link below to activate your account.\n {activation_link}"
+    email_body = f"Hi! {user.username}.\n Please use the link below to activate your account.\n {activation_link}\n\n\n\n[Note: Link will expired on after 24 hours of receiving.]"
     email = EmailMessage(
         subject=email_subject,
         body=email_body,
@@ -45,7 +41,21 @@ def resend_activation_link(user, current_site):
     link = reverse('authentication:activate-account')
     activation_link = f'http://{current_site}{link}?token={token}'
     email_subject = 'Activate Your Account'
-    email_body = f"Hi! {user.username}.\n Please use the link below to activate your account.\n {activation_link}"
+    email_body = f"Hi! {user.username}.\n Please use the link below to activate your account.\n {activation_link}\n\n\n\n[Note: Link will expired on after 24 hours of receiving.]"
+    email = EmailMessage(
+        subject=email_subject,
+        body=email_body,
+        to=[user.email],
+    )
+    email.send(fail_silently=False)
+
+
+def reset_password_email(user, current_site):
+    email_subject = 'Reset Password'
+    token = str(RefreshToken.for_user(user).access_token)
+    link = reverse('authentication:reset-password-confirm')
+    reset_password_link = f'http://{current_site}{link}?token={token}'
+    email_body = f'Hi! {user.username}.\n You have requested for reset password.Below is the link to reset your password.\n {reset_password_link}\n\n\n\n[Note: Link will expired on after 24 hours of receiving.]'
     email = EmailMessage(
         subject=email_subject,
         body=email_body,

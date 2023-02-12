@@ -1,6 +1,9 @@
 from django.contrib import auth
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_str, force_bytes,DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import serializers
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
 from .models import MyUser
 from .utils import validate_password
@@ -33,8 +36,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if not username.isalnum():
             raise serializers.ValidationError(
                 {'username': 'Username should only contain letters and numbers'})
-
-        validate_password(password, confirm_password)
+        try:
+            validate_password(password, confirm_password)
+        except ValidationError as err:
+            raise serializers.ValidationError(
+                {'message': str(err)}
+            )
 
         return data
 
@@ -88,3 +95,30 @@ class LoginSerializer(serializers.ModelSerializer):
             'access': tokens['access']
         }
         return data
+
+class RequestPasswordResetEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    class Meta:
+        fields = ['email']
+
+class ConfirmPasswordResetSerializer(serializers.ModelSerializer):
+    payload = serializers.CharField(read_only=True)
+    new_password = serializers.CharField(style={'input_type': 'password'}, required=True)
+
+    class Meta:
+        model = MyUser
+        fields = ['payload', 'new_password']
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+        try:
+            payload = self.initial_data.get("payload", "")
+            self.user = MyUser.objects.get(pk=payload['user_id'])
+        except (MyUser.DoesNotExist, KeyError, ValueError):
+            raise serializers.ValidationError({
+                "payload": ['Invalid payload.']
+            }, code='invalid_payload')
+
+        return validated_data
+
