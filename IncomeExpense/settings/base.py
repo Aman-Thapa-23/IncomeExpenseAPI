@@ -188,3 +188,27 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=60),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+
+# from celery import Celery
+# from celery.schedules import crontab
+
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+
+# app = Celery('project')
+# app.config_from_object('django.conf:settings', namespace='CELERY')
+# app.autodiscover_tasks()
+
+# # periodic tasks
+# app.conf.beat_schedule = {
+#     'task-name': {
+#         'task': 'app_name.tasks.task_name',
+#         'schedule': crontab(minute='*/15'),
+#     },
+# }
+# CELERYBEAT_SCHEDULE = {
+#     'delete-expired-password-reset-links': {
+#         'task': 'path.to.delete_expired_password_reset_links',
+#         'schedule': timedelta(hours=1),
+#     },
+# }
