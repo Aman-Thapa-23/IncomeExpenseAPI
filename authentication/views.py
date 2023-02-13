@@ -3,10 +3,11 @@ import jwt
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
 from django.utils import timezone
+from django.shortcuts import redirect
 
 from rest_framework.generics import CreateAPIView, GenericAPIView, UpdateAPIView
 from rest_framework.views import APIView
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -61,11 +62,12 @@ class VerifyEmail(APIView):
                 return Response({
                     'status': 'failed',
                     'message': 'Email was already verified.'
-                }, status=status.HTTP_200_OK)
+                }, status=status.HTTP_400_BAD_REQUEST)
             if payload['exp'] > timezone.now().timestamp():
                 user.is_verified = True
                 user.save()
                 PasswordReset.objects.create(user_id = user.id, token=token)
+                redirect('authentication:login')
                 return Response({
                     'status': 'success',
                     'message': 'Email successfully verified.'
@@ -104,13 +106,26 @@ class LoginAPIView(GenericAPIView):
                 'message': 'email or password or both are not filled'
             }, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.serializer_class(data=data)
-        if serializer.is_valid(raise_exception=True):
-            print(serializer.data)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        return Response(data={
-            'status': 'failed',
-            'message': 'something is wrong'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if serializer.is_valid(raise_exception=True):
+    
+                return Response(data={
+                    'status': 'success',
+                    'message': 'login successful',
+                    'refresh': serializer.data['refresh'],
+                    'access': serializer.data['access']
+                }, status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response({
+                'status': 'failed',
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        except AuthenticationFailed as e:
+            return Response({
+                'status': 'failed',
+                'message': str(e)
+            }, status= status.HTTP_401_UNAUTHORIZED)
 
 
 class RequestPasswordResetEmail(GenericAPIView):
