@@ -55,5 +55,5 @@ class IncomeViewSet(ModelViewSet):
         serializer.save(owner=self.request.user)
         return Response({
             'status': 'success',
-            'messsage': 'new income added'
+            'message': 'new income added'
         }, status=status.HTTP_201_CREATED)
