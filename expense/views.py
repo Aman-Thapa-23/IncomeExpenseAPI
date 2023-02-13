@@ -55,5 +55,5 @@ class ExpenseViewSet(ModelViewSet):
         serializer.save(owner=self.request.user)
         return Response({
             'status': 'success',
-            'messsage': 'new expense added'
+            'message': 'new expense added'
         }, status=status.HTTP_201_CREATED)
