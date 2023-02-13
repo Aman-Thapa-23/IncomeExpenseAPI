@@ -78,8 +78,6 @@ class VerifyEmail(APIView):
                 'message': 'Expired activation link.',
                 'resend_link': True
             }, status=status.HTTP_408_REQUEST_TIMEOUT)
-            #if the link has expired then use resend_activation_link() url present in utils by frontend in order
-            #to resend activation link for user
 
         except (jwt.InvalidTokenError, jwt.DecodeError) as e:
             return Response({
@@ -132,9 +130,7 @@ class RequestPasswordResetEmail(GenericAPIView):
     serializer_class = RequestPasswordResetEmailSerializer
 
     def post(self, request, *agrs, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
+        email = request.data['email']
         try:
             user = MyUser.objects.get(email=email)
         except MyUser.DoesNotExist:
@@ -143,12 +139,14 @@ class RequestPasswordResetEmail(GenericAPIView):
                 'message': 'No user was found with the provided email address'
             }, status= status.HTTP_400_BAD_REQUEST)
 
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
         current_site = get_current_site(request).domain
         reset_password_email(user, current_site)
         return Response({
                 'status': 'success',
                 'message': 'password reset link has been mailed successfully',
-            }, status=status.HTTP_201_CREATED)
+            }, status=status.HTTP_200_OK)
 
 
 class ConfirmPasswordResetView(UpdateAPIView):
@@ -180,8 +178,8 @@ class ConfirmPasswordResetView(UpdateAPIView):
                 serializer.user.save()
                 PasswordReset.objects.create(user_id=serializer.user.id, token=token)
                 return Response({
-                    'status': 'successful',
-                    'message': 'Password reset successful!'
+                    'status': 'success',
+                    'message': 'Password reset successful'
                 }, status=status.HTTP_200_OK)
                 
         except jwt.ExpiredSignatureError as e:
@@ -194,7 +192,7 @@ class ConfirmPasswordResetView(UpdateAPIView):
         except (jwt.InvalidTokenError, jwt.DecodeError) as e:
             return Response({
                 'status': 'failed',
-                'message': 'Invalid activation link.'
+                'message': 'Invalid password reset link.'
             }, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         except ValidationError as err:

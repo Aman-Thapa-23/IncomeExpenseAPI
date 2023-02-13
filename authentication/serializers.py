@@ -30,19 +30,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         password = data.get('password')
         confirm_password = data.get('confirm_password')
 
-        if not email:
-            raise serializers.ValidationError({'email': 'Email is required'})
-
         if not username.isalnum():
             raise serializers.ValidationError(
                 {'username': 'Username should only contain letters and numbers'})
-        try:
-            validate_password(password, confirm_password)
-        except ValidationError as err:
-            raise serializers.ValidationError(
-                {'message': str(err)}
-            )
 
+        validate_password(password, confirm_password)
         return data
 
     def create(self, validated_data):
@@ -75,16 +67,14 @@ class LoginSerializer(serializers.ModelSerializer):
         try:
             user_data = MyUser.objects.get(email=email)
         except:
-            raise serializers.ValidationError(
-                {'status': 'failed', 'message': 'enter valid email'})
-        if not user_data.is_verified:  # user_data.is_verified = True. so if not True then failed or can be write as if user_data.is_verified==False
-            raise AuthenticationFailed(
-                {'status': 'failed', 'message': 'account is not verified.'})
+            raise serializers.ValidationError('enter valid email')
+        # if not user_data.is_verified:  # user_data.is_verified = True. so if not True then failed or can be write as if user_data.is_verified==False
+        #     raise AuthenticationFailed(
+        #         {'status': 'failed', 'message': 'account is not verified.'})
 
         user = auth.authenticate(email=email, password=password)
         if not user:
-            raise AuthenticationFailed(
-                {'status': 'failed', 'message': 'invalid credentials, Try Again.'})
+            raise AuthenticationFailed('Invalid credentials, Try Again.')
 
         # from MyUser model because I have created a function to generate tokens for user
         tokens = user.tokens()
@@ -116,9 +106,7 @@ class ConfirmPasswordResetSerializer(serializers.ModelSerializer):
             payload = self.initial_data.get("payload", "")
             self.user = MyUser.objects.get(pk=payload['user_id'])
         except (MyUser.DoesNotExist, KeyError, ValueError):
-            raise serializers.ValidationError({
-                "payload": ['Invalid payload.']
-            }, code='invalid_payload')
+            raise serializers.ValidationError({'Invalid payload.'})
 
         return validated_data
 
