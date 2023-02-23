@@ -9,4 +9,5 @@ urlpatterns = [
     path('login/', LoginAPIView.as_view(), name='login'),
     path('reset-password/', RequestPasswordResetEmail.as_view(), name='reset-password'),
     path('reset-password-confirm/', ConfirmPasswordResetView.as_view(), name='reset-password-confirm'),
+    path('user/password-change/', ChangePasswordView.as_view(), name='change-password'),
 ]
