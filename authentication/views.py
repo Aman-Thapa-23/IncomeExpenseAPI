@@ -9,6 +9,7 @@ from rest_framework.generics import CreateAPIView, GenericAPIView, UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from drf_yasg.utils import swagger_auto_schema
@@ -124,6 +125,16 @@ class LoginAPIView(GenericAPIView):
                 'status': 'failed',
                 'message': str(e)
             }, status= status.HTTP_401_UNAUTHORIZED)
+
+
+class ChangePasswordView(UpdateAPIView):
+    queryset = MyUser.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = PasswordChangeSerializer
+    http_method_names = ['put']
+
+    def get_object(self):
+        return MyUser.objects.get(id=self.request.user.id)
 
 
 class RequestPasswordResetEmail(GenericAPIView):

@@ -26,9 +26,10 @@ schema_view = get_schema_view(
 
 urlpatterns = [
    path('admin/', admin.site.urls),
-   path('auth/', include('authentication.urls', namespace='authentication')),
-   path('expense/', include('expense.urls', namespace='expense')),
-   path('income/', include('income.urls', namespace='income')),
+   path('auth/api/v1/', include('authentication.urls', namespace='authentication')),
+   path('expense/api/v1/', include('expense.urls', namespace='expense')),
+   path('income/api/v1/', include('income.urls', namespace='income')),
+   path('user-stats/api/v1/', include('userstats.urls', namespace='userstats')),
    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
    
